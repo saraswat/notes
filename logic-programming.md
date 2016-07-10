@@ -43,11 +43,11 @@ This is a Datalog program.
 
 ## Executions
 
-A substitution `S` is a mapping of variables to terms. We are only concerned with mappings whose domain is finite, and 
+A _substitution_ `S` is a mapping of variables to terms. We are only concerned with mappings whose domain is finite, and 
 that are _idempotent_ (that is for any variable `X`, `S(X) = S(S(X))`, e.g. `S` maps `X` to `f(a,Y)`, and `Z` to `Y`). 
 This disallows substitutions which map `X` to `Y` and `Y` to `Z`. Instead the substitution should map `X` to `Z` and `Y` to `Z`.
-A substitution whose range contains only variables is said to be a renaming. (e.g. `[X-> Y, U->Y]` is a renaming, but `[X->a, U->Y]` 
-is not, and here I have used an evident shorthand for finite mappings). 
+A substitution whose range contains only variables is said to be a _renaming_. (e.g. `[X-> Y, U->Y]` is a renaming, but `[X->a, U->Y]` 
+is not, and here I have used an evident shorthand for finite mappings). A term `s` is said to be _an instance of_ a term `t` if there is some substition `S` s.t. `s=S(t)`.
 
 A constraint `s=t` is _consistent_ if there is some substitution `S` s.t. `S(s)=S(t)` (`S` is also called a _unifier_, 
 since it “unifies” (= makes the same) `s` and `t`. A set `g` of constraints is consistent if there is a substitution 
@@ -61,10 +61,12 @@ We can describe the execution of a Prolog program `P` as follows. The _current s
 the empty store, i.e. `(q | {})`. The set of variables of the current state `u`, `var(u)`, is the union of the variables 
 in the query and store.
 
-Given the current state `u=(:- a1, ..., an | c)`, execution moves to the state `u'=(:- a1, ..., ai-1, b1, ..., bk, ai+1, ..., an | ai=h,c)`
-provided that `h :- b1, ..., bk` is a “fresh copy” of a rule `r` in `P`, and the constraint set `{ai=h,c}` is consistent. We say that 
-`ai` is the _chosen goal_, and `r` is the _chosen rule_.  (A fresh copy `r'` of a rule `r` is obtained by applying a renaming `S` to `r`;
-`S` is chosen so that its range is distinct from the set of variables of the current state.)
+Execution progresses through application of the _execution rule_:
+>Given the current state `u=(:- a1, ..., an | c)`, execution moves to the state `u'=(:- a1, ..., ai-1, b1, ..., bk, ai+1, ..., an | ai=h,c)` 
+>provided that `h :- b1, ..., bk` is a “fresh copy” of a rule `r` in `P`, and the constraint set `{ai=h,c}` is consistent. 
+
+We say that `ai` is the _chosen goal_, and `r` is the _chosen rule_.  (A fresh copy `r'` of a rule `r` is obtained by applying a 
+renaming `S` to `r`; `S` is chosen so that its range is distinct from the set of variables of the current state.)
 
 Note that if execution moves from state `u` to state `u'` then `var(u)` is a subset of `var(u')`; the newly introduced variables 
 come from the rule and are called _local variables_. Computation _terminates_ when no more move is possible in the current state `(q, s)`. 
@@ -132,8 +134,9 @@ Thus the trace above could equivalently have been represented by:
 ```
 Note that in the above the second component of a pair is not just a fresh renaming of a rule from the program, 
 it is actually an instance of that rule (obtained by applying a substitution) such that the head of the rule is 
-identical to the first component of the pair. I have written it like this just for convenience -- once the 
-first component is selected and the rule is selected the instance of the rule is determinately specifiable.
+an instance of the first component of the pair. I have written it like this just for convenience -- once the 
+first component is selected and the rule is selected the instance of the rule is uniquely determined (upto renaming of the variables
+in the rule).
 
 Here is an example of a trace in which the original query contains some variables:
 ```prolog
@@ -145,8 +148,8 @@ Here is an example of a trace in which the original query contains some variable
 (connected(ny,ct), (connected(ny,ct):- borders(ny,ct)))
 (borders(ny,ct), (borders(ny,ct)))
 ```
-What is not completely obvious in the above execution sequence is that at step 4, `X` was unified with `nj`; this is the 
-substitution needed to unify `borders(X,S3)` and `borders(nj,ny)`. At no other step does the selected goal have variables 
+Note that at step 4, `X` was unified with `nj` and `S3` (a local variable) with `ny`. This is the substitution needed to unify
+`borders(X,S3)` and `borders(nj,ny)`. At no other step does the selected goal have variables 
 that occur in the original query. Hence the “answer” associated with this query is `[X=nj]`. 
 
 Here is an example of a failed execution. Recalled that in a failed execution for no goal in the last state can a rule be chosen
